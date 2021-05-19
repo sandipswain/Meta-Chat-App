@@ -15,6 +15,11 @@ const publicDirpath = path.join(__dirname, "../public");
 // Setup static directory to serve
 app.use(express.static(publicDirpath));
 
+// Listening for a given event to occur
+io.on("connection", () => {
+  console.log("New Websocket Connection");
+});
+
 // Port access
 server.listen(port, () => {
   console.log(`Server is up on PORT ${port}`);
