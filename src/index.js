@@ -15,9 +15,24 @@ const publicDirpath = path.join(__dirname, "../public");
 // Setup static directory to serve
 app.use(express.static(publicDirpath));
 
+let count = 0;
+
+// server (emit) --> client (receive) = countUpdated
+// client (emit) --> server (receive) = increment
+
 // Listening for a given event to occur
-io.on("connection", () => {
+io.on("connection", (socket) => {
   console.log("New Websocket Connection");
+  //It will send the initial count to the client
+  socket.emit("countUpdated", count);
+
+  // Listening an event from the client
+  socket.on("increment", () => {
+    count++;
+    // socket.emit("countUpdated", count);
+    // This is going to emit the event to every single connection that is currently available
+    io.emit("countUpdated", count);
+  });
 });
 
 // Port access
