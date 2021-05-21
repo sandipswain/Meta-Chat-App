@@ -1,10 +1,10 @@
 const socket = io();
+const sub = document.querySelector("#message-form");
 // Receive the event the server sent to client
-socket.on("countUpdated", (count) => {
-  console.log("The Count has been updated", count);
-});
+socket.on("message", (message) => console.log(message));
 
-document.getElementById("increment").addEventListener("click", () => {
-  console.log("Clicked to the terminal");
-  socket.emit("increment");
+sub.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const message = e.target.elements.message.value;
+  socket.emit("sendMessage", message);
 });

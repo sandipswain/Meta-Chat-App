@@ -23,15 +23,12 @@ let count = 0;
 // Listening for a given event to occur
 io.on("connection", (socket) => {
   console.log("New Websocket Connection");
-  //It will send the initial count to the client
-  socket.emit("countUpdated", count);
 
-  // Listening an event from the client
-  socket.on("increment", () => {
-    count++;
-    // socket.emit("countUpdated", count);
-    // This is going to emit the event to every single connection that is currently available
-    io.emit("countUpdated", count);
+  socket.emit("message", "Welcome");
+
+  // Listening an event from a client
+  socket.on("sendMessage", (message) => {
+    io.emit("message", message);
   });
 });
 
