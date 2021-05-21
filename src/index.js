@@ -25,10 +25,17 @@ io.on("connection", (socket) => {
   console.log("New Websocket Connection");
 
   socket.emit("message", "Welcome");
+  // Broadcast lets everyone know that the user has joined except the user that has joined
+  socket.broadcast.emit("message", "A new user has joined");
 
   // Listening an event from a client
   socket.on("sendMessage", (message) => {
+    // This emits the event to evry connected client
     io.emit("message", message);
+  });
+  // To notify all the clients connected to the server when the user gets disconnected
+  socket.on("disconnect", () => {
+    io.emit("message", "A user has left the server");
   });
 });
 
