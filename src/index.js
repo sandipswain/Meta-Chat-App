@@ -33,6 +33,15 @@ io.on("connection", (socket) => {
     // This emits the event to evry connected client
     io.emit("message", message);
   });
+
+  // To notify all Users that a user has shared its location
+  socket.on("sendLocation", (coords) => {
+    io.emit(
+      "message",
+      `https://google.com/maps?q=${coords.latitude},${coords.longitude}`
+    );
+  });
+
   // To notify all the clients connected to the server when the user gets disconnected
   socket.on("disconnect", () => {
     io.emit("message", "A user has left the server");
