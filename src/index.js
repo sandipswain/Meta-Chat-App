@@ -2,6 +2,7 @@ const path = require("path");
 const http = require("http");
 const express = require("express");
 const socketio = require("socket.io");
+const Filter = require("bad-words");
 
 const app = express();
 const server = http.createServer(app);
@@ -29,17 +30,23 @@ io.on("connection", (socket) => {
   socket.broadcast.emit("message", "A new user has joined");
 
   // Listening an event from a client
-  socket.on("sendMessage", (message) => {
+  socket.on("sendMessage", (message, callback) => {
+    const filter = new Filter();
+    if (filter.isProfane(message)) {
+      return callback("Profanity is not allowed");
+    }
     // This emits the event to evry connected client
     io.emit("message", message);
+    callback("Delivered");
   });
 
   // To notify all Users that a user has shared its location
-  socket.on("sendLocation", (coords) => {
+  socket.on("sendLocation", (coords, callback) => {
     io.emit(
       "message",
       `https://google.com/maps?q=${coords.latitude},${coords.longitude}`
     );
+    callback();
   });
 
   // To notify all the clients connected to the server when the user gets disconnected
