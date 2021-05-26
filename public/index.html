@@ -6,6 +6,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat App</title>
+    <link rel="icon" href="./img/favicon.png">
+    <link rel="stylesheet" href="./css/styles.min.css">
     <!-- Client library of the Socket IO -->
     <script defer src="/socket.io/socket.io.js"></script>
     <script defer src="./js/chat.js"></script>
@@ -15,21 +17,39 @@
 </head>
 
 <body>
-    <div id="messages"></div>
-    <form action="" id="message-form">
-        <input type="text" placeholder="Enter your message" name="message"><br><br>
-        <button>Submit</button>
-    </form>
-    <button id="send-location">Send Location</button>
+    <div class="chat">
+        <!-- Sidebar -->
+        <div class="chat__sidebar"></div>
+        <!-- Main content -->
+        <div class="chat__main">
+            <div id="messages" class="chat__messages"></div>
+            <div class="compose">
+                <form action="" id="message-form">
+                    <input type="text" placeholder="Enter your message" name="message">
+                    <button>Submit</button>
+                </form>
+                <button id="send-location">Send Location</button>
+            </div>
+        </div>
+    </div>
+
     <script id="message-template" type="text/html">
-        <div>
-            <p>{{createdAt}} - {{message}} </p>
+        <div class="message">
+            <p>
+                <span class="message__name">Spectra</span>
+                <span class="message__meta">{{createdAt}}</span>
+            </p>
+            <p>{{message}} </p>
         </div>
     </script>
 
     <script id="location-message-template" type="text/html">
-        <div>
-            <p> <a href="{{url}}" target="_blank">My Current location</a> </p>
+        <div class="message">
+            <p>
+                <span class="message__name">Spectra</span>
+                <span class="message__meta">{{createdAt}}</span>
+            </p>
+            <p><a href="{{url}}" target="_blank">My Current location</a> </p>
         </div>
     </script>
 </body>
