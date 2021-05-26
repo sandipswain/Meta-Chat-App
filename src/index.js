@@ -3,63 +3,93 @@ const http = require("http");
 const express = require("express");
 const socketio = require("socket.io");
 const Filter = require("bad-words");
-const { generateMessage } = require("./utils/messages");
-const { generateLocationMessage } = require("./utils/messages");
+const {
+  generateMessage,
+  generateLocationMessage,
+} = require("./utils/messages");
+const {
+  addUser,
+  removeUser,
+  getUser,
+  getUsersInRoom,
+} = require("./utils/users");
 
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
 const port = process.env.PORT || 3000;
+const publicDirectoryPath = path.join(__dirname, "../public");
 
-// Define path for express config
-const publicDirpath = path.join(__dirname, "../public");
+app.use(express.static(publicDirectoryPath));
 
-// Setup static directory to serve
-app.use(express.static(publicDirpath));
-
-let count = 0;
-
-// server (emit) --> client (receive) = countUpdated
-// client (emit) --> server (receive) = increment
-
-// Listening for a given event to occur
 io.on("connection", (socket) => {
-  console.log("New Websocket Connection");
+  console.log("New WebSocket connection");
 
-  socket.emit("message", generateMessage("Welcome!"));
-  // Broadcast lets everyone know that the user has joined except the user that has joined
-  socket.broadcast.emit("message", generateMessage("A new user has joined!"));
+  socket.on("join", (options, callback) => {
+    const { error, user } = addUser({ id: socket.id, ...options });
 
-  // Listening an event from a client
-  socket.on("sendMessage", (message, callback) => {
-    const filter = new Filter();
-    if (filter.isProfane(message)) {
-      return callback("Profanity is not allowed");
+    if (error) {
+      return callback(error);
     }
-    // This emits the event to evry connected client
-    io.emit("message", generateMessage(message));
-    callback("Delivered");
+
+    socket.join(user.room);
+
+    socket.emit("message", generateMessage("Admin", "Welcome!"));
+    socket.broadcast
+      .to(user.room)
+      .emit(
+        "message",
+        generateMessage("Admin", `${user.username} has joined!`)
+      );
+    io.to(user.room).emit("roomData", {
+      room: user.room,
+      users: getUsersInRoom(user.room),
+    });
+
+    callback();
   });
 
-  // To notify all Users that a user has shared its location
+  socket.on("sendMessage", (message, callback) => {
+    const user = getUser(socket.id);
+    const filter = new Filter();
+
+    if (filter.isProfane(message)) {
+      return callback("Profanity is not allowed!");
+    }
+
+    io.to(user.room).emit("message", generateMessage(user.username, message));
+    callback();
+  });
+
   socket.on("sendLocation", (coords, callback) => {
-    io.emit(
+    const user = getUser(socket.id);
+    io.to(user.room).emit(
       "locationMessage",
       generateLocationMessage(
+        user.username,
         `https://google.com/maps?q=${coords.latitude},${coords.longitude}`
       )
     );
     callback();
   });
 
-  // To notify all the clients connected to the server when the user gets disconnected
   socket.on("disconnect", () => {
-    io.emit("message", generateMessage("A user has left the server"));
+    const user = removeUser(socket.id);
+
+    if (user) {
+      io.to(user.room).emit(
+        "message",
+        generateMessage("Admin", `${user.username} has left!`)
+      );
+      io.to(user.room).emit("roomData", {
+        room: user.room,
+        users: getUsersInRoom(user.room),
+      });
+    }
   });
 });
 
-// Port access
 server.listen(port, () => {
-  console.log(`Server is up on PORT ${port}`);
+  console.log(`Server is up on port ${port}!`);
 });
